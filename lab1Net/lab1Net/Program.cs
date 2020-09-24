@@ -8,7 +8,7 @@ using System.Reflection;
 
 public class RemoteConnect
 {
-
+    public static readonly string _fileName = "\\prInfo.txt";
     public static string GetComputerName()
     {
         return Environment.MachineName;
@@ -41,16 +41,25 @@ public class RemoteConnect
     public static string ReadKeyFromFile()
     {
         string ExecDir = Environment.CurrentDirectory;
-        var reader = new StreamReader(ExecDir + "\\prInfo.txt");
-        var Key = reader.ReadLine();
-        reader.Close();
-        return Key;
+        try
+        {
+            var reader = new StreamReader(ExecDir + _fileName);
+            var Key = reader.ReadLine();
+            reader.Close();
+            return Key;
+        }
+        catch
+        {
+            throw new Exception();
+        }
+        
+        
     }
 
     public static bool WriteKeyInFile(string serialNumber)
     {
         string ExecDir = Environment.CurrentDirectory;
-        var writer = new StreamWriter(ExecDir + "\\prInfo.txt");
+        var writer = new StreamWriter(ExecDir + _fileName);
         writer.Write(GetHash(serialNumber));
         writer.Close();
 
@@ -74,14 +83,22 @@ public class RemoteConnect
 
         if (args.Length == 0)
         {
-            if (ReadKeyFromFile() == GetHash(GetHddSerialNumber()))
+            try
             {
-                Console.WriteLine("Access granted!");
+                if (ReadKeyFromFile() == GetHash(GetHddSerialNumber()))
+                {
+                    Console.WriteLine("Access granted!");
+                }
+                else
+                {
+                    Console.WriteLine("Access denied");
+                }
             }
-            else
+            catch
             {
-                Console.WriteLine("Access denied");
+                Console.WriteLine("Access denied, you should to run installer");
             }
+            
         }
         else if (args.FirstOrDefault() == "install")
         {
