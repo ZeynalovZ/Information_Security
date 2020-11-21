@@ -58,8 +58,28 @@ namespace lab3
                 }
             }
         }
-
         
+        public void InvMixColumns(byte[,] s)
+        { // 's' is the main State matrix, 'ss' is a temp matrix of the same dimensions as 's'.
+            Array.Clear(ss, 0, ss.Length);
+
+            for (int c = 0; c < 4; c++)
+            {
+                ss[0, c] = (byte)(GMul(0x0E, s[0, c]) ^ GMul(0x0B, s[1, c]) ^ GMul(0x0D, s[2, c]) ^ GMul(0x09, s[3, c]));
+                ss[1, c] = (byte)(GMul(0x09, s[0, c]) ^ GMul(0x0E, s[1, c]) ^ GMul(0x0B, s[2, c]) ^ GMul(0x0D, s[3, c]));
+                ss[2, c] = (byte)(GMul(0x0D, s[0, c]) ^ GMul(0x09, s[1, c]) ^ GMul(0x0E, s[2, c]) ^ GMul(0x0B, s[3, c]));
+                ss[3, c] = (byte)(GMul(0x0B, s[0, c]) ^ GMul(0x0D, s[1, c]) ^ GMul(0x09, s[2, c]) ^ GMul(0x0E, s[3, c]));
+            }
+
+            for (int i = 0; i < 4; i++)
+            {
+                for (int j = 0; j < 4; j++)
+                {
+                    s[i, j] = ss[i, j];
+                }
+            }
+        }
+
 
         public void ShiftRowsMatrix(byte [,] s)
         {
@@ -89,6 +109,36 @@ namespace lab3
             s[3, 1] = tmp1;
             s[3, 2] = tmp2;
             s[3, 3] = tmp3;
+        }
+        
+        public void InvShiftRowsMatrix(byte[,] s)
+        {
+            // первая строка не меняется
+
+            // вторая строка
+            var tmp = s[1, 3];
+            s[1, 3] = s[1, 2];
+            s[1, 2] = s[1, 1];
+            s[1, 1] = s[1, 0];
+            s[1, 0] = tmp;
+
+            // третья строка
+            var tmp1 = s[2, 3];
+            var tmp2 = s[2, 2];
+            s[2, 3] = s[2, 1];
+            s[2, 2] = s[2, 0];
+            s[2, 1] = tmp1;
+            s[2, 0] = tmp2;
+
+            // четвертая строка
+
+            tmp1 = s[3, 3];
+            tmp2 = s[3, 2];
+            var tmp3 = s[3, 1];
+            s[3, 3] = s[3, 0];
+            s[3, 2] = tmp1;
+            s[3, 1] = tmp2;
+            s[3, 0] = tmp3;
         }
 
         public void AddRoundKey(byte[,] s, Word w1, Word w2, Word w3, Word w4)

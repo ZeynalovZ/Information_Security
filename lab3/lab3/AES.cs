@@ -23,6 +23,8 @@ namespace lab3
 
         public int _additionalBytesCount = 0;
 
+        public int _additionalInvBytesCount = 0;
+
         List<byte[,]> blockBytes = new List<byte[,]>();
 
         private int[] Sbox =
@@ -120,6 +122,16 @@ namespace lab3
             word.b4 = SubByte(word.b4);
         }
 
+        public byte InvSubByte(byte b)
+        {
+            string tmp = b.ToString("X2");
+            int row = Convert.ToInt32(tmp[0].ToString(), 16);
+            int column = Convert.ToInt32(tmp[1].ToString(), 16);
+            byte newByte = (byte)invSbox[row * 16 + column];
+            return newByte;
+        }
+
+
 
         public void Xor(Word word1, Word word2)
         {
@@ -180,12 +192,28 @@ namespace lab3
 
         }
 
+        public void InvSubBytesMatrix(byte[,] s)
+        {
+            for (int i = 0; i < 4; i++)
+            {
+                for (int j = 0; j < 4; j++)
+                {
+                    s[i, j] = InvSubByte(s[i, j]);
+                }
+            }
+
+        }
+
         public void GenerateMatrixes()
         {
             var bytesLenght = _bytes.Length;
             var blocksCount = bytesLenght / 16;
             var additionalBytesCount = bytesLenght % 16;
-            _additionalBytesCount = additionalBytesCount;
+            if (additionalBytesCount != 0)
+            {
+                _additionalBytesCount = 16 - additionalBytesCount;
+            }
+                
             var missingBytesCount = 16 - additionalBytesCount;
             
 
@@ -276,8 +304,31 @@ namespace lab3
             return (byte[])bytes.Clone();
         }
 
+        public byte[] InvGetBytes()
+        {
+            int neededBytesCount = blockBytes.Count * 16 - _additionalInvBytesCount;
+            byte[] bytes = new byte[neededBytesCount];
+            
+            int index = 0;
+            foreach (var blk in blockBytes)
+            {
+                for (int i = 0; i < 4; i++)
+                {
+                    for (int j = 0; j < 4; j++)
+                    {
+                        if (index < neededBytesCount)
+                            bytes[index] = (blk[j, i]);
+                        index++;
+                    }
+                }
+            }
+
+            return (byte[])bytes.Clone();
+        }
+
         public byte[] EncryptBytes()
         {
+            
 
             GenerateMatrixes();
             foreach (var matrix in blockBytes)
@@ -285,7 +336,6 @@ namespace lab3
                 _matrix.PrintMatrix(matrix);
             }
 
-            
 
             foreach (var matrix in blockBytes)
             {
@@ -310,9 +360,40 @@ namespace lab3
             
         }
 
-        public void DecryptBytes(byte[] key)
+        public byte[] DecryptBytes()
         {
 
+            _additionalInvBytesCount = _bytes.Last();
+            var tmp = _bytes.ToList();
+            tmp.RemoveAt(tmp.Count - 1);
+            _bytes = tmp.ToArray();
+
+            GenerateMatrixes();
+            foreach (var matrix in blockBytes)
+            {
+                _matrix.PrintMatrix(matrix);
+            }
+
+
+            foreach (var matrix in blockBytes)
+            {
+                _matrix.AddRoundKey(matrix, wKey[Nr * Nb], wKey[Nr * Nb + 1], wKey[Nr * Nb + 2], wKey[Nr * Nb + 3]);
+
+                for (int i = Nr - 1; i > 0; i--)
+                {
+                    _matrix.InvShiftRowsMatrix(matrix);
+                    InvSubBytesMatrix(matrix);
+                    _matrix.AddRoundKey(matrix, wKey[i * Nb], wKey[i * Nb + 1], wKey[i * Nb + 2], wKey[i * Nb + 3]);
+                    _matrix.InvMixColumns(matrix);
+                }
+                _matrix.InvShiftRowsMatrix(matrix);
+                InvSubBytesMatrix(matrix);
+                
+                _matrix.AddRoundKey(matrix, wKey[0], wKey[1], wKey[2], wKey[3]);
+                _matrix.PrintMatrix(matrix);
+            }
+
+            return InvGetBytes();
 
         }
 

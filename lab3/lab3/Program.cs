@@ -9,27 +9,36 @@ namespace lab3
 
         static void Main(string[] args)
         {
-
+            Console.WriteLine("Input textfile name");
+            var inFileName = Console.ReadLine();
             var dir = Directory.GetCurrentDirectory();
             Console.WriteLine(dir);
-            var fileBytes = File.ReadAllBytes(dir + "\\text.txt");
+            var fileBytes = File.ReadAllBytes(dir + $"\\{inFileName}");
             Console.WriteLine(fileBytes.Length);
 
-            byte[] key = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16 };
+            
+
+            Console.WriteLine("Input  res textfile name");
+            var resFileName = Console.ReadLine();
+
+            Console.WriteLine("Input encrypt (1) / decrypt(2)");
+            var method = Console.ReadLine();
+
+            byte[] key = { 1, 2, 3, 4, 5, 6, 7, 8, 1, 2, 3, 4, 5, 6, 7, 8 };
 
             var algo = new AES(fileBytes, key);
 
-            var resBytes = algo.EncryptBytes();
-            /*
-                        Console.WriteLine("===========");
-                        string str = "";
-                        for (int i = 0; i < resBytes.Length; i++)
-                        {
-                            str += resBytes[i] + " ";
-                        }
-                        Console.WriteLine(str);*/
+            byte[] resBytes;
+            if (method == "1")
+            {
+                resBytes = algo.EncryptBytes();
+            }
+            else
+            {
+                resBytes = algo.DecryptBytes();
+            }
 
-            File.WriteAllBytes("res.txt", resBytes);
+            File.WriteAllBytes(resFileName, resBytes);
         }
     }
 }
